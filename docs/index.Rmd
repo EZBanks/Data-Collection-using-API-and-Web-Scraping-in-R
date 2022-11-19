@@ -1,0 +1,141 @@
+---
+title: "Data Collection using API and Web Scraping"
+author: "Ouatatchin Kone"
+output: html_document
+---
+
+
+## Executive Summary
+
+This data collection project consists of two mini-projects using API and Web Scraping.
+
+In the first mini-project, I use API technique to collect job-based data from Job postings portals and stored in IBM cloud in order to identify trends on emerging programming languages and database skills.
+
+In the second mini-project, I use Web Scraping technique to collect Amazon 30 desktop best sellers. 
+
+
+## Data Collection from IBM using API
+
+```{r}
+library(httr)
+library(jsonlite)
+library(readr)
+library(data.table)
+library(tidyverse)
+```
+
+Creating a GET response to call the API
+
+
+```{r Creating a GET response to call the API}
+emerging_skills <- GET("https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-DA0321EN-SkillsNetwork/labs/module%201/Accessing%20Data%20Using%20APIs/jobs.json")
+```
+
+Viewing API GET response result
+
+```{r Viewing API GET response result}
+str(emerging_skills)
+```
+
+Viewing the main source of the data needed from the API 
+
+```{r Viewing the main source of the data needed from the API}
+str(emerging_skills$content)
+```
+
+Converting the raw data to text
+
+```{r Converting the raw data to text}
+emerging_skills_content <- content(emerging_skills, "text")
+str(emerging_skills_content)
+```
+emerging_skills_JSON <- fromJSON(emerging_skills_content)
+
+
+
+
+## Data Collection from Amazon using Web Scraping
+
+```{r}
+library(robotstxt)
+
+library(rvest)
+
+library(selectr)
+
+library(xml2)
+
+library(dplyr)
+
+library(stringr)
+
+library(forcats)
+
+library(magrittr)
+
+library(tidyr)
+
+library(lubridate)
+
+library(tibble)
+
+library(purrr)
+```
+
+Checking whether we are allowed to access the website 
+
+```{r Checking whether we are allowed to access the website}
+paths_allowed(
+  
+  paths = c ("https://www.amazon.com/Best-Sellers-Desktop-Computers/zgbs/electronics/565098"))
+```
+
+Reading html
+
+```{r Reading html}
+top_computers <- read_html("https://www.amazon.com/Best-Sellers-Desktop-Computers/zgbs/electronics/565098")
+top_computers
+```
+
+Extracting computer names
+
+```{r Extracting computer names}
+top_computers %>%
+  html_nodes("._cDEzb_p13n-sc-css-line-clamp-3_g3dy1") %>%
+  html_text() %>%
+  str_split(',') %>%
+  map_chr(1) -> Brand_name
+Brand_name
+```
+
+Extracting computer prices
+
+```{r Extracting computer prices}
+top_computers %>%
+  html_nodes(".a-link-normal span") %>%
+  html_text() %>%
+  str_extract(pattern = "^\\$.*") %>%
+  na.omit() %>%
+  unique() -> Price
+Price
+```
+
+Extracting computer ratings
+
+```{r Extracting computer ratings}
+top_computers %>%
+  html_nodes(".a-icon-alt") %>%
+  html_text() %>%
+  str_split('out') %>%
+  map_chr(1) %>%
+  str_trim()-> Rating
+Rating
+```
+
+Merging data frames into one data frame named Amazon_Computer_Best_Sellers
+
+```{r Merging data frames into one data frame}
+Amazon_Computer_Best_Sellers <- tibble(Brand_name, Price, Rating)
+Amazon_Computer_Best_Sellers
+```
+
